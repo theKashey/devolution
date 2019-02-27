@@ -1,7 +1,0 @@
-require('core-js/modules/es6.object.keys')
-require('core-js/modules/es6.array.iterator')
-require('core-js/modules/es6.string.includes')
-require('core-js/modules/es7.array.includes')
-require('core-js/modules/es6.promise')
-require('core-js/modules/es6.string.iterator')
-require('regenerator-runtime')

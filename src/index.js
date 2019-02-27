@@ -2,13 +2,11 @@ import fs from 'fs';
 import util from 'util';
 import path from 'path';
 import child_process from 'child_process';
-import browserify from 'browserify';
-import terser from 'terser';
+import Worker from 'jest-worker';
 
-import {transformSync} from "@babel/core";
-import swc from "@swc/core";
 import builtIns from '@babel/preset-env/data/built-ins';
-import createDetector from './detector';
+
+import {composePolyfill} from "./workers/composePolyfill";
 
 const defaultTargets = {
   esm: {
@@ -20,46 +18,6 @@ const defaultTargets = {
   ie11: {
     "ie": "11",
   },
-};
-
-
-const extractPolyfills = (dist, file) => {
-  const fills = [];
-  const flags = {
-    usesRegenerator: false
-  };
-  const code = fs.readFileSync(path.join(dist, file)).toString();
-  transformSync(code, {
-    babelrc: false,
-    plugins: [
-      createDetector(fills, flags),
-      '@babel/plugin-proposal-class-properties',
-      '@babel/plugin-syntax-dynamic-import',
-    ],
-  });
-
-  if (flags.usesRegenerator) {
-    fills.push('@regenerator');
-  }
-
-  return fills;
-};
-
-const compile = async (dist, file, target, targets) => {
-  const code = fs.readFileSync(path.join(dist, file)).toString();
-  if (target === 'esm') {
-    // it's already transpiled
-    return code;
-  }
-  return (await swc.transform(code, {
-    "jsc": {
-      "parser": {
-        "syntax": "ecmascript",
-        "classProperty": true,
-      },
-      "target": "es5"
-    }
-  })).code;
 };
 
 const isBelow = (ruleName, rule, target) => (
@@ -77,13 +35,18 @@ const inTime = async cb => {
   console.log('** done in ', Date.now() - timeIn);
 }
 
-export const scan = async (dist, out, mainBundle, bundledPolyfills = true, targets = defaultTargets) => {
+export const scan = async (dist, out, mainBundlePattern = 'never', bundledPolyfills = false, targets = defaultTargets) => {
+
+  const mainBundleReg = new RegExp(mainBundlePattern);
+
   const allFiles = await util.promisify(fs.readdir)(dist);
   const jsFiles = allFiles.filter(file => path.extname(file) === '.js');
   const otherFiles = allFiles.filter(file => (
     !jsFiles.includes(file) &&
     !fs.lstatSync(path.join(dist, file)).isDirectory()
   ));
+
+  const mainBundle = jsFiles.find(name => name === mainBundlePattern) || jsFiles.find(name => name.match(mainBundleReg));
 
   const polyfills = {};
   let basePolyfills = [];
@@ -100,27 +63,31 @@ export const scan = async (dist, out, mainBundle, bundledPolyfills = true, targe
     fs.mkdirSync(polyfillDir);
   }
 
-  await inTime(() => {
-    console.log('scanning files', {dist, out, mainBundle});
+  await inTime(async () => {
+    console.log('scanning files', {dist, out, mainBundle, bundledPolyfills});
+    const worker = new Worker(require.resolve('./workers/detect'));
 
-
-    const polyfillsLeft = x => basePolyfills.indexOf(x) >= 0;
+    const polyfillsLeft = x => basePolyfills.indexOf(x) < 0;
 
     if (mainBundle && mainBundle !== '.') {
-      console.log('-', mainBundle);
-      basePolyfills = polyfills[mainBundle] = extractPolyfills(dist, mainBundle);
+      basePolyfills = polyfills[mainBundle] = await worker.extractPolyfills(dist, mainBundle);
+      console.log('-', mainBundle, '+', basePolyfills.length);
     }
 
-    jsFiles.forEach(file => {
-      if (file !== mainBundle) {
-        console.log('-', file);
-        polyfills[file] = extractPolyfills(dist, file).filter(polyfillsLeft)
-      }
-    });
+    await Promise.all(
+      jsFiles.map(async file => {
+        if (file !== mainBundle) {
+          polyfills[file] = (await worker.extractPolyfills(dist, file)).filter(polyfillsLeft);
+          console.log('- scan -', file, '+', polyfills[file].length);
+        }
+      })
+    );
+    worker.end();
   });
 
   await inTime(async () => {
     console.log('generating polyfills');
+    const worker = new Worker(require.resolve('./workers/composePolyfill'));
 
     const writePromises = [];
     Object
@@ -150,21 +117,20 @@ export const scan = async (dist, out, mainBundle, bundledPolyfills = true, targe
             const fileIn = path.join(polyfillDir, `${target}-${key}.mjs`);
             fs.writeFileSync(fileIn, chunkPolyfills.join('\n'));
 
-            writePromises.push(new Promise(resolve =>
-              browserify(fileIn).bundle((err, buf) => {
-                polyCache[`${target}-${key}`] = terser.minify(buf.toString()).code;
-                resolve();
-              })
-            ));
+            writePromises.push((async () => {
+              polyCache[`${target}-${key}`] = await worker.composePolyfill(fileIn);
+            })());
           });
       });
 
     console.log('composing polyfills...');
     await Promise.all(writePromises);
+    worker.end();
   });
 
   await inTime(async () => {
     console.log('creating target bundles');
+    const worker = new Worker(require.resolve('./workers/transpile'));
 
     const writePromises = [];
 
@@ -179,17 +145,17 @@ export const scan = async (dist, out, mainBundle, bundledPolyfills = true, targe
           .keys(polyfills)
           .map(async file => {
             const fileOut = path.join(bundleDir, file);
-            const code = await compile(dist, file, target, targets[target])
-            fs.writeFileSync(fileOut,
-              `var devolutionBundle = '${target}';` +
-              polyCache[`${target}-${file}`] +
-              code
-            )
+            const code = await worker.compileAndWrite(
+              dist, file, target,
+              fileOut, polyCache[`${target}-${file}`]
+            );
+            console.log('- compile -', file);
           }))
       });
 
     console.log('devoluting bundles...');
     await Promise.all(writePromises);
+    worker.end();
   });
 
   await inTime(async () => {
@@ -199,11 +165,15 @@ export const scan = async (dist, out, mainBundle, bundledPolyfills = true, targe
       Object
         .keys(targets)
         .forEach(target => {
-          child_process.execSync(
-            otherFiles
-              .map(file => `ln -s ${path.join(dist, file)} ${path.join(outDir, target, file)}`)
-              .join(' && ')
-          )
+          try {
+            child_process.execSync(
+              otherFiles
+                .map(file => `ln -s ${path.join(dist, file)} ${path.join(outDir, target, file)}`)
+                .join(' && ')
+            )
+          } catch(e){
+            // nope
+          }
         })
     }
   });

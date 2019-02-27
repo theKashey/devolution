@@ -6,7 +6,8 @@ de-evolution gun, as seen in Mario Bros, to help you ship modern, and de-moderni
 - ship more modern, more compact and more fast code to 85+% of your customers
 - do not worry about transpiling node_modules - use as modern code as you can
 - run everywhere
-- uses [swc](https://github.com/swc-project/swc) to be a blazing🔥 fast!  
+- uses [swc](https://github.com/swc-project/swc) to be a blazing🔥 fast!  (actually it's not)
+- uses jest-worker to consume all your cores
 
 ### TWO bundles to rule the world
 
@@ -27,7 +28,7 @@ That's is the oldest living browser, and can be used as a base line.
 
 
 ## Usage
-1. Compile your code to the `esmodules` target __without__ `polyfills`. This is your "base layer".
+1. Compile your code to the `esmodules` target with, or without `polyfills`. This is your "base layer".
 The modern browser baseline, with 
 ```js
 {
@@ -64,6 +65,19 @@ __webpack_public_path__ = devolutionBundle + '/';
 <script type="module" src="esm/index.js"></script>
 <script type="text/javascript" src="ie11/index.js" nomodule></script>
 ```
+### But this approach has issues
+IE11 will download both bundles, but execute only the right one.
+Use feature detection to pick the right bundle:
+```js
+      var check = document.createElement('script');
+      if (!('noModule' in check)) {
+        check.src = "ie11/index.js"
+      } else {
+        check.src = "esm/index.js"
+      }
+      document.head.appendChild(check);
+```
+
 
 5. Done!
 

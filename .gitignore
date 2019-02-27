@@ -5,3 +5,4 @@ coverage
 .DS_Store
 .nyc_output
 yarn-error.log
+_tests/dist
