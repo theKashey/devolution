@@ -7,6 +7,10 @@
   de-evolution gun, as seen in Mario Bros, to help you ship modern, and de-modernized bundles. 
   <br/>
   <br/>
+    <a href="https://www.npmjs.com/package/devolution">
+      <img src="https://img.shields.io/npm/v/devolution.svg?style=flat-square" />
+    </a>
+
 </div>
 
 ============
