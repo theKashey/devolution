@@ -13,7 +13,6 @@
 
 </div>
 
-============
 
 ## Why?
 - ship more modern, more compact and more fast code to 85+% of your customers
