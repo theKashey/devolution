@@ -1,13 +1,24 @@
-Devolution
+<div align="center">
+  <h1>DEvolution 🦖</h1>
+  <br/>
+  <img src="./assets/devo-logo.jpg" alt="devolution" width="409" align="center">
+  <br/>
+  <br/>
+  de-evolution gun, as seen in Mario Bros, to help you ship modern, and de-modernized bundles. 
+  <br/>
+  <br/>
+</div>
+
 ============
-de-evolution gun, as seen in Mario Bros, to help you ship modern, and de-modernized bundles.
 
 ## Why?
 - ship more modern, more compact and more fast code to 85+% of your customers
 - do not worry about transpiling node_modules - use as modern code as you can
 - run everywhere
+
 - uses [swc](https://github.com/swc-project/swc) to be a blazing🔥 fast!  (actually it's not)
-- uses jest-worker to consume all your cores
+- uses [jest-worker](https://github.com/facebook/jest/tree/master/packages/jest-worker) to consume all your CPU cores
+- users [terser](https://github.com/terser-js/terser) without mangling to compress the result 
 
 ### TWO bundles to rule the world
 
@@ -45,6 +56,10 @@ The modern browser baseline, with
 
 2. Fire devolution to produce de-modernized bundles
 ```bash
+// if use have used `useBuiltIns: usage`, thus "esm" polyfills would be skipped
+yarn devolution ./dist ./dist index.js true
+
+// else all nessesary polyfills would be bundled
 yarn devolution ./dist ./dist index.js
 ```
 It will produce `esm` and `ie11` target (nothing more is supported right now) by applying `Babel` one more time
