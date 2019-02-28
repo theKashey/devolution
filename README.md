@@ -78,26 +78,35 @@ __webpack_public_path__ = devolutionBundle + '/';
 
 
 4. Ship the right script to the browser
+Please dont use code like this
 ```js
 <script type="module" src="esm/index.js"></script>
 <script type="text/javascript" src="ie11/index.js" nomodule></script>
 ```
-### But this approach has issues
-IE11 will download both bundles, but execute only the right one.
+It does not for the really "old" browsers - IE11 will download both bundles, but execute only the right one.
+Probably that would made things even worse.
+
 Use feature detection to pick the right bundle:
 ```js
-      var check = document.createElement('script');
-      if (!('noModule' in check)) {
-        check.src = "/ie11/index.js"
-      } else {
-        check.src = "/esm/index.js"
-      }
-      document.head.appendChild(check);
+  var script = document.createElement('script');
+  var prefix = (!('noModule' in check)) ? "/ie11" : "/esm"; 
+  script..src = prefix + "/index.js";
+  document.head.appendChild(script);
 ```
+This "prefix" is all you need.
+
 
 5. Done!
 
 A few seconds to setup, a few seconds to build
+
+##### Why two separate folders?
+In the most articles, you might find online, ES5 and ES6 bundles are generated independently,
+and ES5 uses `.js` extension, while ES6 uses `.mjs`.
+
+That requires two real bundling steps as long as "hashes" of files and "chunk names", bundles inside `runtime-chunk` would be different.
+That's why we generate two folders - to be able just to use prefix, to enable switching between bundles just using
+`__webpack_public_path__` or parcel script location autodetection.
 
 ##### Drawbacks
 
