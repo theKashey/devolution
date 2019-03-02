@@ -8,10 +8,11 @@
     "build": "babel src -d dist"
   },
   "bin": {
-    "devolution": "./dist/cli.js"
+    "devolution": "./bin/devolution"
   },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "repository": "https://github.com/theKashey/devolution/",
   "author": "theKashey <thekashey@gmail.com>",
