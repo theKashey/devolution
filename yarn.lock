@@ -699,10 +699,10 @@
     lodash "^4.17.11"
     to-fast-properties "^2.0.0"
 
-"@swc/core@^1.0.27":
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.0.27.tgz#88d959830726da014a8ca2dc58cd4f3ca9529dca"
-  integrity sha512-3g/Rz6EW2vVSMMUuPvfOfitFq1vVjMcLkt3ZOIQUJlgb6Wxi+3IYchHbKYtjd3HaRNaM4FZa05OSVF0fxpNNQQ==
+"@swc/core@^1.0.30":
+  version "1.0.30"
+  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.0.30.tgz#6cc78b246490ea0270799ca1e43e7b50a9589f5a"
+  integrity sha512-6abOWUfxDTWdq6Q7NsA5gB35ceSy3+mUEL6JVFtJiOWxrFgfdu69nKkMuGCI+8I8TTFltdP9YJwENaX1qXsZVg==
   dependencies:
     mkdirp "^0.5.1"
     neon-cli "^0.2.0"

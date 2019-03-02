@@ -10,13 +10,18 @@
   "bin": {
     "devolution": "./dist/cli.js"
   },
-  "author": "",
-  "license": "ISC",
+  "files": [
+    "dist"
+  ],
+  "repository": "https://github.com/theKashey/devolution/",
+  "author": "theKashey <thekashey@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/theKashey/devolution#readme",
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.3.4",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/preset-env": "^7.3.1",
-    "@swc/core": "^1.0.27",
+    "@swc/core": "^1.0.30",
     "browserify": "^16.2.3",
     "jest-worker": "^24.0.0",
     "regenerator-runtime": "^0.13.1",

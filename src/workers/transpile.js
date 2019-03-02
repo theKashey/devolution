@@ -5,8 +5,6 @@ import terser from "terser";
 import {transformSync} from "@babel/core";
 import swc from "@swc/core";
 
-// SWC IS NOT STABLE!
-
 const useSWC = false;
 
 const useTerserPass = true;
