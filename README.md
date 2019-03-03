@@ -90,7 +90,7 @@ Use feature detection to pick the right bundle:
 ```js
   var script = document.createElement('script');
   var prefix = (!('noModule' in check)) ? "/ie11" : "/esm"; 
-  script..src = prefix + "/index.js";
+  script.src = prefix + "/index.js";
   document.head.appendChild(script);
 ```
 This "prefix" is all you need.
