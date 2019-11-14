@@ -18,7 +18,7 @@
 - ship more modern, more compact and more fast code to 85+% of your customers
 - do not worry about transpiling node_modules - use as modern code as you can everywhere
 - don't be bound to the bundler
-- well, it's just faster than a `multi-compiler mode` and 100% customizable
+- well, it's just faster than a `multi-compiler mode` and __100% customizable__.
 
 - 🚀 fast - uses [swc](https://github.com/swc-project/swc) to be a blazing 🔥 fast!
 - 📱 multi threaded - uses [jest-worker](https://github.com/facebook/jest/tree/master/packages/jest-worker) to consume all your CPU cores
@@ -62,10 +62,14 @@ If your code is not using babel plugins, and non-yet-supported by the browsers c
 ### 2. Fire devolution to produce de-modernized bundles
 > the first run would create `.devolutionrc.js`, which could be used to tune some details
 ```bash
-// all the nessesary polyfills would be bundled
+yarn devolution from to
+// like
 yarn devolution dist dist
 ```
 It will convert all files in `dist` into `esm` and `es5` targets in the same `dist`
+
+> By default it will handle only files in the directory, __not__ including subdirs.
+You might return array of files via `.devolutionrc` to handle all your files
 
 ### 3  (Only webpack) setup `public-path`, somewhere close to the script start
 ```js
