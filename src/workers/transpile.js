@@ -25,9 +25,10 @@ const compileSWC = async (code) => (
         "classProperty": true,
       },
       "target": "es5",
-      // "transform": {
-      //   "optimizer": undefined
-      // }
+      "minify": true,
+      "transform": {
+        "optimizer": undefined
+      }
     }
   })).code
 );

@@ -90,11 +90,44 @@ Use feature detection to pick the right bundle:
 ```
 This "prefix" is all you need.
 
+### 4, again. SSR this time
+However, it's much better to use Server Side logic to pick the right bundle - you might control
+which bundle should be shipped in which case.
+
+But default - use the same `browsers` as they are listed in `.devolutionrc.js` `targets` for `esm`,
+however - you might "raise the bar", shipping modern code only to `Chrome 80+`,
+or introduce __more than two__ bundles - the "language" in the top ones could be the same, but polyfills set would be different. 
+
+```js
+import UA from 'browserslist-useragent'
+
+export const isModernBrowser = (userAgent) => {
+  return UA.matchesUA(userAgent, {
+    _allowHigherVersions: true,
+    browsers: [
+      "Chrome >= 61",
+      "Safari >= 10.1",
+      "iOS >= 11.3",
+      "Firefox >= 60",
+      "Edge >= 16"
+    ]
+  })
+}
+
+function renderApp(req, res) {
+  const userAgent = req.headers['user-agent'];
+
+  const bundleMode = isModernBrowser(userAgent) ? 'esm' : 'es5';
+  // send the right scripts
+}
+```
+
 See [Optimising JS Delivery](https://dev.to/thekashey/optimising-js-delivery-4h6l) for details
 
 ### 5. Done!
 
 A few minutes to setup, a few seconds to build
+
 
 ## Tuning
 See `.devolutionrc.js`, it contains all information you might look for
