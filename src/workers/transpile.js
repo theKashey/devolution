@@ -60,7 +60,7 @@ export const compile = async (dist, file, target, {targets, plugins, useSWC, use
         console.error('terser[', file, ':', error);
       }
 
-      return code || transformedCode;
+      return code || `/* with terser error: ${error}*/\n${transformedCode}`;
     }
 
     return transformedCode;

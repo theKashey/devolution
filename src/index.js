@@ -240,7 +240,7 @@ export const scan = async (dist, out, _options = getRC()) => {
       },
       columnCount: 4
     });
-    tableStream.write(['target', 'file', 'time, ms', 'terser']);
+    tableStream.write(['target', 'file', 'time, ms', 'delta']);
 
     Object
       .keys(targets)
@@ -265,7 +265,8 @@ export const scan = async (dist, out, _options = getRC()) => {
                 useTerser: useTerser,
               }
             );
-            tableStream.write([target, file, Date.now() - now, useTerser]);
+            const delta = fileSize(fileOut) - fileSize(path.join(dist, file));
+            tableStream.write([target, file, Date.now() - now, (delta > 0 ? '+' : '-') + Math.abs(delta)]);
           }))
       });
 
@@ -304,15 +305,16 @@ export const scan = async (dist, out, _options = getRC()) => {
     const report = [
       ['target', 'size', 'delta', 'polyfills', 'added']
     ];
-    report.push(['base', base, 0, basePolyfills.length, '']);
+    report.push(['base', base, 0, '(base)' + basePolyfills.length, '']);
     Object
       .keys(targets)
       .forEach(target => {
         const size = getSize(path.join(outDir, target), jsFiles);
+        const delta = size - base;
         report.push([
           target,
           size,
-          size - base,
+          (delta > 0 ? '+' : '-') + Math.abs(delta),
           targetPolyfills[target].length,
           targetPolyfills[target].join(',')
         ]);
