@@ -5,7 +5,7 @@ import {transformSync} from "@babel/core";
 
 import createDetector from '../plugins/detectPolyfills';
 
-export const extractPolyfills = (dist, file) => {
+export const extractPolyfills = (dist, file, plugins) => {
   const fills = [];
   const flags = {
     usesRegenerator: false
@@ -15,8 +15,7 @@ export const extractPolyfills = (dist, file) => {
     babelrc: false,
     plugins: [
       createDetector(fills, flags),
-      '@babel/plugin-proposal-class-properties',
-      '@babel/plugin-syntax-dynamic-import',
+      ...Array.from(plugins),
     ],
   });
 

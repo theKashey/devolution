@@ -115,6 +115,7 @@ export default (polyfills, flags) => function ({types: t}) {
           if (has(staticMethods, propName)) {
             const builtIn = staticMethods[propName];
             addUnsupported(path, builtIn, this.builtIns);
+            // edge case
             // if (obj.name === "Array" && prop.name === "from") {
             //   addImport(
             //     path,

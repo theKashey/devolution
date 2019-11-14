@@ -12,21 +12,24 @@
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    ".devolutionrc.js"
   ],
   "repository": "https://github.com/theKashey/devolution/",
   "author": "theKashey <thekashey@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/theKashey/devolution#readme",
   "dependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.3.4",
+    "@babel/plugin-proposal-class-properties": "^7.7.0",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
-    "@babel/preset-env": "^7.3.1",
-    "@swc/core": "^1.0.30",
-    "browserify": "^16.2.3",
+    "@babel/preset-env": "^7.7.1",
+    "@swc/core": "^1.0.48",
+    "browserify": "^16.5.0",
+    "chalk": "^3.0.0",
     "jest-worker": "^24.0.0",
-    "regenerator-runtime": "^0.13.1",
-    "terser": "^3.16.1"
+    "regenerator-runtime": "^0.13.3",
+    "table": "^5.4.6",
+    "terser": "^4.4.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",

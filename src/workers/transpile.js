@@ -5,65 +5,71 @@ import terser from "terser";
 import {transformSync} from "@babel/core";
 import swc from "@swc/core";
 
-const useSWC = false;
-
-const useTerserPass = true;
-
-const compileBabel = (code) => (
+const compileBabel = (code, targets, plugins) => (
   transformSync(code, {
     babelrc: false,
     presets: [
       [
         '@babel/preset-env', {
-        targets: {
-          "ie": 11
-        }
+        targets,
       }]],
-    plugins: [
-      '@babel/plugin-proposal-class-properties',
-      '@babel/plugin-syntax-dynamic-import',
-    ]
+    plugins,
   }).code
 );
 
 const compileSWC = async (code) => (
   (await swc.transform(code, {
+    "minify": true,
+    "module": {
+      "type": "commonjs",
+      "strict": false,
+      "strictMode": false,
+    },
     "jsc": {
       "parser": {
         "syntax": "ecmascript",
-        "classProperty": true,
+        "classProperty": true
       },
       "target": "es5",
-      // "transform": {
-      //   "optimizer": undefined
-      // }
+      "transform": {
+        "optimizer": undefined
+      }
     }
   })).code
-)
+);
 
 
-export const compile = async (dist, file, target) => {
+export const compile = async (dist, file, target, {targets, plugins, useSWC, useTerser}) => {
   const code = readFileSync(join(dist, file)).toString();
-  if (target === 'esm') {
-    // it's already transpiled
-    return code;
-  }
   try {
-    const es5code = useSWC
-      ? compileSWC(code)
-      : compileBabel(code);
+    const transformedCode = await (
+      target === 'esm'
+        ? code
+        : (useSWC && target === "es5"
+          ? compileSWC(code)
+          : compileBabel(code, targets, plugins)
+        )
+    );
 
-    if(useTerserPass) {
-      const minCode = terser.minify(es5code, {
+    if (useTerser) {
+      const {code, error} = terser.minify(transformedCode, {
         mangle: false,
         keep_fnames: true,
         keep_classnames: true,
-      }).code;
 
-      return minCode || es5code;
+        // modern target
+        ecma: 8,
+        safari10: true
+      });
+
+      if (error) {
+        console.error('terser[', file, ':', error);
+      }
+
+      return code || `/* with terser error: ${error}*/\n${transformedCode}`;
     }
 
-    return es5code;
+    return transformedCode;
   } catch (e) {
     console.error('while processing', dist, file);
     console.error(e);
@@ -71,8 +77,8 @@ export const compile = async (dist, file, target) => {
   }
 };
 
-export const compileAndWrite = async (dist, file, target, fileOut, prepend) => {
-  const code = await compile(dist, file, target);
+export const compileAndWrite = async (dist, file, target, fileOut, prepend, options) => {
+  const code = await compile(dist, file, target, options);
 
   writeFileSync(
     fileOut,
