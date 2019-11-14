@@ -9,7 +9,7 @@ module.exports = Promise.resolve({ // could be async
 
   includesPolyfills: false, // are polyfills included in the baseline bundle, or we should add them?
 
-  useSWC: true, // https://github.com/swc-project/swc faster than babel, used only for es5 target
+  useSWC: false, // https://github.com/swc-project/swc faster than babel, used only for es5 target
   useTerser: true, // the result bundle might be "prettied"
   useTerserForBaseline: false, // apply minification for the baseline bundle
 
