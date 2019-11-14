@@ -331,7 +331,7 @@ export const scan = async (dist, out, _options = getRC()) => {
           alignment: 'right'
         },
         4: {
-          width: 50,
+          width: 60,
           wrapWord: true,
         }
       }
