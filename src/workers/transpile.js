@@ -19,13 +19,18 @@ const compileBabel = (code, targets, plugins) => (
 
 const compileSWC = async (code) => (
   (await swc.transform(code, {
+    "minify": true,
+    "module": {
+      "type": "commonjs",
+      "strict": false,
+      "strictMode": false,
+    },
     "jsc": {
       "parser": {
         "syntax": "ecmascript",
-        "classProperty": true,
+        "classProperty": true
       },
       "target": "es5",
-      "minify": true,
       "transform": {
         "optimizer": undefined
       }

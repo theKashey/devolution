@@ -18,10 +18,11 @@
 - ship more modern, more compact and more fast code to 85+% of your customers
 - do not worry about transpiling node_modules - use as modern code as you can everywhere
 - don't be bound to the bundler
+- well, it's just faster than a `multi-compiler mode` and 100% customizable
 
-- uses [swc](https://github.com/swc-project/swc) to be a blazing 🔥 fast!
-- uses [jest-worker](https://github.com/facebook/jest/tree/master/packages/jest-worker) to consume all your CPU cores
-- uses [terser](https://github.com/terser-js/terser) without mangling to compress the result 
+- 🚀 fast - uses [swc](https://github.com/swc-project/swc) to be a blazing 🔥 fast!
+- 📱 multi threaded - uses [jest-worker](https://github.com/facebook/jest/tree/master/packages/jest-worker) to consume all your CPU cores
+- 🗜 compact - uses [terser](https://github.com/terser-js/terser) without mangling to re-compress the result 
 
 ### TWO bundles to rule the world
 
@@ -51,7 +52,12 @@
   ]
 }  
 ```
-> `useBuiltIns` are optional
+> `useBuiltIns` are optional, and plays well with `includesPolyfills` option in `.devolutionrc`
+
+3. [sucrase](https://github.com/alangpierce/sucrase) is an option
+`sucrase` is much faster than babel(and swc), however is able to produce only "modern" code.
+However, this is what we need.
+If your code is not using babel plugins, and non-yet-supported by the browsers code - feel free to use it.
 
 ### 2. Fire devolution to produce de-modernized bundles
 > the first run would create `.devolutionrc.js`, which could be used to tune some details
@@ -68,7 +74,7 @@ __webpack_public_path__ = devolutionBundle + '/'; // devolutionBundle is a prede
 > `Parcel` will configure public path automatically.
 
 
-#### Simlink
+#### Symlink
 Then `devolution` will symlink resources to "sub-bundles" 
 
 ### 4. Ship the right script to the browser
