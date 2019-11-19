@@ -83,7 +83,7 @@ module.exports = Promise.resolve({ // could be async
    *  plugins for transformation pass
    */
   babelTransform: [
-    '@babel/plugin-plugin-object-rest-spread',
+    '@babel/plugin-proposal-object-rest-spread',
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-syntax-dynamic-import',
   ],

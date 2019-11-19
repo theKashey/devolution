@@ -21,7 +21,10 @@
   "homepage": "https://github.com/theKashey/devolution#readme",
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.7.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
+    "@babel/plugin-syntax-class-properties": "^7.2.0",
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-syntax-object-rest-spread": "^7.2.0",
     "@babel/preset-env": "^7.7.1",
     "@swc/core": "^1.0.48",
     "browserify": "^16.5.0",
