@@ -59,7 +59,12 @@ module.exports = Promise.resolve({ // could be async
         "chrome": "70", // if baseline bundle used preset-modern use some "big" target, but ship only for this "big" target!
       }
       : {
-        // if baseline bundle used preset-env+esmodules
+        // this controls polyfills for ESM bundle
+        // you might be surprised how many of them might be bundled
+        // core-js 3 : see https://github.com/zloirock/core-js/blob/master/packages/core-js-compat/src/data.js
+        // core-js 2 : see https://github.com/theKashey/devolution/blob/master/src/data/corejs2/built-ins.js
+
+        // if baseline bundle used preset-env+esmodules - https://github.com/babel/babel/blob/master/packages/babel-preset-env/data/built-in-modules.json
         "edge": "16",
         "firefox": "60",
         "chrome": "61",
