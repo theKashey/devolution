@@ -1,5 +1,3 @@
-import {definitions} from "@babel/preset-env/lib/built-in-definitions";
-
 function has(obj, key) {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -9,7 +7,8 @@ function getType(target) {
   return typeof target;
 }
 
-export default (polyfills, flags) => function ({types: t}) {
+export default (polyfills, flags, definitions) => function ({types: t}) {
+  const {BuiltIns, StaticProperties, InstanceProperties} = definitions;
   function addImport(
     path,
     builtIn,
@@ -42,10 +41,10 @@ export default (polyfills, flags) => function ({types: t}) {
       const {node, parent, scope} = path;
 
       if (t.isMemberExpression(parent)) return;
-      if (!has(definitions.builtins, node.name)) return;
+      if (!has(BuiltIns, node.name)) return;
       if (scope.getBindingIdentifier(node.name)) return;
 
-      const builtIn = definitions.builtins[node.name];
+      const builtIn = BuiltIns[node.name];
       addUnsupported(path, builtIn, this.builtIns);
     },
 
@@ -110,8 +109,8 @@ export default (polyfills, flags) => function ({types: t}) {
             evaluatedPropType = result.deopt.node.name;
           }
         }
-        if (has(definitions.staticMethods, evaluatedPropType)) {
-          const staticMethods = definitions.staticMethods[evaluatedPropType];
+        if (has(StaticProperties, evaluatedPropType)) {
+          const staticMethods = StaticProperties[evaluatedPropType];
           if (has(staticMethods, propName)) {
             const builtIn = staticMethods[propName];
             addUnsupported(path, builtIn, this.builtIns);
@@ -126,9 +125,9 @@ export default (polyfills, flags) => function ({types: t}) {
           }
         }
 
-        if (has(definitions.instanceMethods, propName)) {
+        if (has(InstanceProperties, propName)) {
           //warnOnInstanceMethod(state, getObjectString(node));
-          let builtIn = definitions.instanceMethods[propName];
+          let builtIn = InstanceProperties[propName];
           if (instanceType) {
             builtIn = builtIn.filter(item => item.includes(instanceType));
           }
@@ -143,10 +142,10 @@ export default (polyfills, flags) => function ({types: t}) {
         const {node} = path;
         const obj = node.object;
 
-        if (!has(definitions.builtins, obj.name)) return;
+        if (!has(BuiltIns, obj.name)) return;
         if (path.scope.getBindingIdentifier(obj.name)) return;
 
-        const builtIn = definitions.builtins[obj.name];
+        const builtIn = BuiltIns[obj.name];
         addUnsupported(path, builtIn, this.builtIns);
       },
     },
@@ -169,14 +168,14 @@ export default (polyfills, flags) => function ({types: t}) {
         if (
           !node.computed &&
           t.isIdentifier(prop) &&
-          has(definitions.instanceMethods, prop.name)
+          has(InstanceProperties, prop.name)
         ) {
           // warnOnInstanceMethod(
           //   state,
           //   `${path.parentPath.node.kind} { ${prop.name} } = ${obj.name}`,
           // );
 
-          const builtIn = definitions.instanceMethods[prop.name];
+          const builtIn = InstanceProperties[prop.name];
           addUnsupported(path, builtIn, this.builtIns);
         }
       }
@@ -190,7 +189,7 @@ export default (polyfills, flags) => function ({types: t}) {
   };
 
   return {
-    name: "use-built-ins",
+    name: "use-built-ins-devo",
     pre() {
       this.builtIns = new Set();
     },

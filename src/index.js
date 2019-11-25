@@ -6,7 +6,13 @@ import Worker from 'jest-worker';
 import chalk from 'chalk';
 import {table, createStream} from 'table';
 
-import builtIns from '@babel/preset-env/data/built-ins';
+import corejs2 from './data/corejs2';
+import corejs3 from './data/corejs3';
+
+const corejsVersions = {
+  2: corejs2,
+  3: corejs3,
+};
 
 import {getRC} from "./rc";
 
@@ -37,6 +43,15 @@ export const scan = async (dist, out, _options = getRC()) => {
   console.log(chalk.bold.underline.green("devolution"), "🦎 -> 🦖");
 
   const options = await _options;
+
+  const corejsVersion = +(options.corejs || 2);
+  const corejs = corejsVersions[corejsVersion];
+
+  if (!corejs) {
+    throw new Error('invalid core-js version:' + corejsVersion);
+  }
+
+  const {builtIns, definitions} = corejs;
 
   const targets = options.targets;
 
@@ -83,7 +98,7 @@ export const scan = async (dist, out, _options = getRC()) => {
     fs.mkdirSync(polyfillDir);
   }
 
-  console.log({dist, out, mainBundle, bundledPolyfills: options.includesPolyfills});
+  console.log({dist, out, mainBundle, bundledPolyfills: options.includesPolyfills, 'core-js': corejsVersion});
 
   console.log(" -> 🦎 -> ", chalk.bold.underline.green("scanning files"));
   console.group();
@@ -103,24 +118,20 @@ export const scan = async (dist, out, _options = getRC()) => {
       },
       columnCount: 2
     });
-    tableStream.write(['file', 'polyfills found']);
+    tableStream.write(['file', 'polyfills required']);
 
     const worker = new Worker(require.resolve('./workers/detect'));
-
     const polyfillsLeft = x => basePolyfills.indexOf(x) < 0;
 
-    const report = {};
-
     if (mainBundle && mainBundle !== '.') {
-      basePolyfills = polyfills[mainBundle] = await worker.extractPolyfills(dist, mainBundle, options.babelScan);
+      basePolyfills = polyfills[mainBundle] = await worker.extractPolyfills(dist, mainBundle, options.babelScan, definitions);
       tableStream.write([mainBundle, basePolyfills.length]);
-
     }
 
     await Promise.all(
       jsFiles.map(async file => {
         if (file !== mainBundle) {
-          polyfills[file] = (await worker.extractPolyfills(dist, file, options.babelScan)).filter(polyfillsLeft);
+          polyfills[file] = (await worker.extractPolyfills(dist, file, options.babelScan, definitions)).filter(polyfillsLeft);
           tableStream.write([file, polyfills[file].length]);
         }
       })
@@ -201,9 +212,19 @@ export const scan = async (dist, out, _options = getRC()) => {
             fs.writeFileSync(fileIn, chunkPolyfills.join('\n'));
 
             writePromises.push((async () => {
-              polyCache[`${target}-${key}`] = await worker.composePolyfill(fileIn);
+              let composedResult = '';
+              if (fileSize(fileIn) > 0) {
+                composedResult = await worker.composePolyfill(fileIn);
+                const {error} = composedResult;
+                if (error) {
+                  console.log('');
+                  console.error(`failed to compose polyfill from ${fileIn}. Error: ${error}`);
+                  throw new Error(error);
+                }
+                polyCache[`${target}-${key}`] = composedResult;
+              }
 
-              tableStream.write([target, key, list.length ? list.length : '-', fileSize(fileIn), list]);
+              tableStream.write([target, key, list.length ? list.length : '-', composedResult.length, list]);
             })());
           });
       });

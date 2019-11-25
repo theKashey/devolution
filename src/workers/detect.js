@@ -5,7 +5,7 @@ import {transformSync} from "@babel/core";
 
 import createDetector from '../plugins/detectPolyfills';
 
-export const extractPolyfills = (dist, file, plugins) => {
+export const extractPolyfills = (dist, file, plugins, definitions) => {
   const fills = [];
   const flags = {
     usesRegenerator: false
@@ -14,7 +14,7 @@ export const extractPolyfills = (dist, file, plugins) => {
   transformSync(code, {
     babelrc: false,
     plugins: [
-      createDetector(fills, flags),
+      createDetector(fills, flags, definitions),
       ...Array.from(plugins),
     ],
   });

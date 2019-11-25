@@ -8,6 +8,13 @@ const USE_MODERN = false;
 
 module.exports = Promise.resolve({ // could be async
   /**
+   * core-js version. Version 3 is more modern, while version 2 is more common
+   * this __must__ be synchoronized with corejs version visible to babel, and installed by you
+   * (if not installed, then it's v2)
+   */
+  corejs: "3",
+
+  /**
    * files to add could be RegExp or array
    */
   match: /\.js$/,
@@ -63,10 +70,11 @@ module.exports = Promise.resolve({ // could be async
 
     /**
      * the legacy target (you might need only it)
-     * it is roughtly "just ES5". Target (ie11) controls polyfills
+     * it is roughly "just ES5". Target (ie11) controls polyfills
      */
     es5: {
-      "ie": "11",
+      // list the lowest browser here, it would not affect the "language", only polyfills
+      "ie": "11", // do not support IE9, and IE10
     },
   },
 
@@ -93,5 +101,15 @@ module.exports = Promise.resolve({ // could be async
    */
   ignorePolyfills: [
     // put a list of polyfills to ignore, they would be considered as already added
+
+    // WeakMap is defacto supported my IE11, but not listed compact table and would be included in any case
+    "es6.weak-map",
+
+    // almost any library has a failback for Symbol support
+    'es6.symbol',
+    'es7.symbol.async-iterator',
+
+    // and almost no library uses extra RegExp features
+    'es6.regexp.flags',
   ]
 });

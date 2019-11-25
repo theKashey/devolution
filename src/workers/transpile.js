@@ -17,9 +17,9 @@ const compileBabel = (code, targets, plugins) => (
   }).code
 );
 
-const compileSWC = async (code) => (
+const compileSWC = async (code, minify) => (
   (await swc.transform(code, {
-    "minify": true,
+    "minify": minify,
     "module": {
       "type": "commonjs",
       "strict": false,
@@ -45,8 +45,8 @@ export const compile = async (dist, file, target, {targets, plugins, useSWC, use
     const transformedCode = await (
       target === 'esm'
         ? code
-        : (useSWC && target === "es5"
-          ? compileSWC(code)
+        : ((useSWC && target === "es5")
+          ? compileSWC(code, useTerser)
           : compileBabel(code, targets, plugins)
         )
     );
@@ -58,7 +58,7 @@ export const compile = async (dist, file, target, {targets, plugins, useSWC, use
         keep_classnames: true,
 
         // modern target
-        ecma: 8,
+        ecma: target === "es5"? 5 : 8,
         safari10: true
       });
 

@@ -29,6 +29,7 @@
     "@swc/core": "^1.0.48",
     "browserify": "^16.5.0",
     "chalk": "^3.0.0",
+    "core-js-compat": "^3.4.2",
     "jest-worker": "^24.0.0",
     "regenerator-runtime": "^0.13.3",
     "table": "^5.4.6",
