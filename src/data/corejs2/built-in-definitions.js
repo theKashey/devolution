@@ -4,9 +4,9 @@ const ArrayNatureIterators = [
   "web.dom.iterable",
 ];
 
-const CommonIterators = ["es6.string.iterator", ...ArrayNatureIterators];
+export const CommonIterators = ["es6.string.iterator", ...ArrayNatureIterators];
 
-const PromiseDependencies = ["es6.object.to-string", "es6.promise"];
+export const PromiseDependencies = ["es6.object.to-string", "es6.promise"];
 
 export const BuiltIns = {
   DataView: "es6.typed.data-view",
@@ -184,3 +184,19 @@ export const StaticProperties = {
     setPrototypeOf: "es6.reflect.set-prototype-of",
   },
 };
+
+export const CommonInstanceDependencies = [
+  "es6.object.to-string",
+  "es7.object.define-getter",
+  "es7.object.define-setter",
+  "es7.object.lookup-getter",
+  "es7.object.lookup-setter",
+];
+
+
+export const PossibleGlobalObjects = [
+  "global",
+  "globalThis",
+  "self",
+  "window",
+];

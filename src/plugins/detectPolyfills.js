@@ -3,195 +3,212 @@ function has(obj, key) {
 }
 
 function getType(target) {
-  if (Array.isArray(target)) return "array";
-  return typeof target;
+  return Object.prototype.toString.call(target).slice(8, -1).toLowerCase();
 }
 
-export default (polyfills, flags, definitions) => function ({types: t}) {
-  const {BuiltIns, StaticProperties, InstanceProperties} = definitions;
-  function addImport(
-    path,
-    builtIn,
-    builtIns,
-  ) {
-    if (builtIn && !builtIns.has(builtIn)) {
-      builtIns.add(builtIn);
-      polyfills.push(builtIn);
-    }
-  }
+function isNamespaced(path) {
+  if (!path.node) return false;
+  const binding = path.scope.getBinding(path.node.name);
+  if (!binding) return false;
+  return binding.path.isImportNamespaceSpecifier();
+}
 
-  function addUnsupported(
-    path,
-    builtIn,
-    builtIns,
-  ) {
-    if (Array.isArray(builtIn)) {
-      for (const i of builtIn) {
-        addImport(path, i, builtIns);
+function resolveKey(path, computed) {
+  const {node, parent, scope} = path;
+  if (path.isStringLiteral()) return node.value;
+  const {name} = node;
+  const isIdentifier = path.isIdentifier();
+  if (isIdentifier && !(computed || parent.computed)) return name;
+  if (!isIdentifier || scope.getBindingIdentifier(name)) {
+    const {value} = path.evaluate();
+    if (typeof value === "string") return value;
+  }
+}
+
+function resolveSource(path) {
+  const {node, scope} = path;
+  let builtIn, instanceType;
+  if (node) {
+    builtIn = node.name;
+    if (!path.isIdentifier() || scope.getBindingIdentifier(builtIn)) {
+      const {deopt, value} = path.evaluate();
+      if (value !== undefined) {
+        instanceType = getType(value);
+      } else if (deopt && deopt.isIdentifier()) {
+        builtIn = deopt.node.name;
       }
-    } else {
-      addImport(path, builtIn, builtIns);
     }
   }
+  return {builtIn, instanceType, isNamespaced: isNamespaced(path)};
+}
+
+// https://raw.githubusercontent.com/babel/babel/master/packages/babel-preset-env/src/polyfills/corejs3/usage-plugin.js
+
+export default (polyfills, flags, definitions) => function ({types: t}) {
+  const {
+    BuiltIns,
+    StaticProperties,
+    InstanceProperties,
+    PromiseDependencies,
+    CommonIterators,
+    PossibleGlobalObjects,
+    CommonInstanceDependencies,
+  } = definitions;
 
   const addAndRemovePolyfillImports = {
-    // Symbol()
-    // new Promise
-    ReferencedIdentifier(path, state) {
-      const {node, parent, scope} = path;
+    // require('core-js')
+    // Program: {
+    //   exit(path) {
+    //     const filtered = intersection(polyfills, this.polyfillsSet, available);
+    //     const reversed = Array.from(filtered).reverse();
+    //
+    //     for (const module of reversed) {
+    //       // Program:exit could be called multiple times.
+    //       // Avoid injecting the polyfills twice.
+    //       if (!this.injectedPolyfills.has(module)) {
+    //         createImport(path, module);
+    //       }
+    //     }
+    //
+    //     filtered.forEach(module => this.injectedPolyfills.add(module));
+    //   },
+    // },
 
-      if (t.isMemberExpression(parent)) return;
-      if (!has(BuiltIns, node.name)) return;
-      if (scope.getBindingIdentifier(node.name)) return;
-
-      const builtIn = BuiltIns[node.name];
-      addUnsupported(path, builtIn, this.builtIns);
+    // import('something').then(...)
+    Import() {
+      this.addUnsupported(PromiseDependencies);
     },
 
-    // arr[Symbol.iterator]()
-    CallExpression(path) {
-      // we can't compile this
-      if (path.node.arguments.length) return;
-
-      const callee = path.node.callee;
-      if (!t.isMemberExpression(callee)) return;
-      if (!callee.computed) return;
-      if (!path.get("callee.property").matchesPattern("Symbol.iterator")) {
-        return;
+    Function({node}) {
+      // (async function () { }).finally(...)
+      if (node.async) {
+        this.addUnsupported(PromiseDependencies);
       }
-
-      addImport(path, "web.dom.iterable", this.builtIns);
     },
 
-    // Symbol.iterator in arr
-    BinaryExpression(path) {
-      if (path.node.operator !== "in") return;
-      if (!path.get("left").matchesPattern("Symbol.iterator")) return;
+    // for-of, [a, b] = c
+    "ForOfStatement|ArrayPattern"() {
+      this.addUnsupported(CommonIterators);
+    },
 
-      addImport(path, "web.dom.iterable", this.builtIns);
+    // [...spread]
+    SpreadElement({parentPath}) {
+      if (!parentPath.isObjectExpression()) {
+        this.addUnsupported(CommonIterators);
+      }
     },
 
     // yield*
-    YieldExpression(path) {
-      if (!path.node.delegate) return;
-
-      addImport(path, "web.dom.iterable", this.builtIns);
+    YieldExpression({node}) {
+      if (node.delegate) {
+        this.addUnsupported(CommonIterators);
+      }
     },
 
-    // Array.from
-    MemberExpression: {
-      enter(path, state) {
-        if (!path.isReferenced()) return;
+    // Symbol(), new Promise
+    ReferencedIdentifier({node: {name}, scope}) {
+      if (scope.getBindingIdentifier(name)) return;
 
-        const {node} = path;
-        const obj = node.object;
-        const prop = node.property;
-
-        if (!t.isReferenced(obj, node)) return;
-        let instanceType;
-        let evaluatedPropType = obj.name;
-        let propName = prop.name;
-        if (node.computed) {
-          if (t.isStringLiteral(prop)) {
-            propName = prop.value;
-          } else {
-            const res = path.get("property").evaluate();
-            if (res.confident && res.value) {
-              propName = res.value;
-            }
-          }
-        }
-        if (path.scope.getBindingIdentifier(obj.name)) {
-          const result = path.get("object").evaluate();
-          if (result.value) {
-            instanceType = getType(result.value);
-          } else if (result.deopt && result.deopt.isIdentifier()) {
-            evaluatedPropType = result.deopt.node.name;
-          }
-        }
-        if (has(StaticProperties, evaluatedPropType)) {
-          const staticMethods = StaticProperties[evaluatedPropType];
-          if (has(staticMethods, propName)) {
-            const builtIn = staticMethods[propName];
-            addUnsupported(path, builtIn, this.builtIns);
-            // edge case
-            // if (obj.name === "Array" && prop.name === "from") {
-            //   addImport(
-            //     path,
-            //     "@babel/polyfill/lib/core-js/modules/web.dom.iterable",
-            //     this.builtIns,
-            //   );
-            // }
-          }
-        }
-
-        if (has(InstanceProperties, propName)) {
-          //warnOnInstanceMethod(state, getObjectString(node));
-          let builtIn = InstanceProperties[propName];
-          if (instanceType) {
-            builtIn = builtIn.filter(item => item.includes(instanceType));
-          }
-          addUnsupported(path, builtIn, this.builtIns);
-        }
-      },
-
-      // Symbol.match
-      exit(path, state) {
-        if (!path.isReferenced()) return;
-
-        const {node} = path;
-        const obj = node.object;
-
-        if (!has(BuiltIns, obj.name)) return;
-        if (path.scope.getBindingIdentifier(obj.name)) return;
-
-        const builtIn = BuiltIns[obj.name];
-        addUnsupported(path, builtIn, this.builtIns);
-      },
+      this.addBuiltInDependencies(name);
     },
 
-    // var { repeat, startsWith } = String
-    VariableDeclarator(path, state) {
-      if (!path.isReferenced()) return;
+    MemberExpression(path) {
+      const source = resolveSource(path.get("object"));
+      const key = resolveKey(path.get("property"));
 
-      const {node} = path;
-      const obj = node.init;
+      // Object.entries
+      // [1, 2, 3].entries
+      this.addPropertyDependencies(source, key);
+    },
 
-      if (!t.isObjectPattern(node.id)) return;
-      if (!t.isReferenced(obj, node)) return;
+    ObjectPattern(path) {
+      const {parentPath, parent, key} = path;
+      let source;
 
-      // doesn't reference the global
-      if (obj && path.scope.getBindingIdentifier(obj.name)) return;
+      // const { keys, values } = Object
+      if (parentPath.isVariableDeclarator()) {
+        source = resolveSource(parentPath.get("init"));
+        // ({ keys, values } = Object)
+      } else if (parentPath.isAssignmentExpression()) {
+        source = resolveSource(parentPath.get("right"));
+        // !function ({ keys, values }) {...} (Object)
+        // resolution does not work after properties transform :-(
+      } else if (parentPath.isFunctionExpression()) {
+        const grand = parentPath.parentPath;
+        if (grand.isCallExpression() || grand.isNewExpression()) {
+          if (grand.node.callee === parent) {
+            source = resolveSource(grand.get("arguments")[key]);
+          }
+        }
+      }
 
-      for (let prop of node.id.properties) {
-        prop = prop.key;
-        if (
-          !node.computed &&
-          t.isIdentifier(prop) &&
-          has(InstanceProperties, prop.name)
-        ) {
-          // warnOnInstanceMethod(
-          //   state,
-          //   `${path.parentPath.node.kind} { ${prop.name} } = ${obj.name}`,
-          // );
-
-          const builtIn = InstanceProperties[prop.name];
-          addUnsupported(path, builtIn, this.builtIns);
+      for (const property of path.get("properties")) {
+        if (property.isObjectProperty()) {
+          const key = resolveKey(property.get("key"));
+          // const { keys, values } = Object
+          // const { keys, values } = [1, 2, 3]
+          this.addPropertyDependencies(source, key);
         }
       }
     },
 
-    Function(path, state) {
-      if (path.node.generator || path.node.async) {
-        flags.usesRegenerator = true;
-      }
+    BinaryExpression(path) {
+      if (path.node.operator !== "in") return;
+
+      const source = resolveSource(path.get("right"));
+      const key = resolveKey(path.get("left"), true);
+
+      // 'entries' in Object
+      // 'entries' in [1, 2, 3]
+      this.addPropertyDependencies(source, key);
     },
   };
 
   return {
     name: "use-built-ins-devo",
     pre() {
-      this.builtIns = new Set();
+      this.polyfillsSet = new Set();
+
+      this.addUnsupported = function (builtIn) {
+        const modules = Array.isArray(builtIn) ? builtIn : [builtIn];
+        for (const module of modules) {
+          this.polyfillsSet.add(module);
+        }
+      };
+
+      this.addBuiltInDependencies = function (builtIn) {
+        if (has(BuiltIns, builtIn)) {
+          const BuiltInDependencies = BuiltIns[builtIn];
+          this.addUnsupported(BuiltInDependencies);
+        }
+      };
+
+      this.addPropertyDependencies = function (source = {}, key) {
+        const {builtIn, instanceType, isNamespaced} = source;
+        if (isNamespaced) return;
+        if (PossibleGlobalObjects.includes(builtIn)) {
+          this.addBuiltInDependencies(key);
+        } else if (has(StaticProperties, builtIn)) {
+          const BuiltInProperties = StaticProperties[builtIn];
+          if (has(BuiltInProperties, key)) {
+            const StaticPropertyDependencies = BuiltInProperties[key];
+            return this.addUnsupported(StaticPropertyDependencies);
+          }
+        }
+        if (!has(InstanceProperties, key)) return;
+        let InstancePropertyDependencies = InstanceProperties[key];
+        if (instanceType) {
+          InstancePropertyDependencies = InstancePropertyDependencies.filter(
+            m => m.includes(instanceType) || CommonInstanceDependencies.includes(m),
+          );
+        }
+        this.addUnsupported(InstancePropertyDependencies);
+      };
+    },
+    post() {
+      for (let i of this.polyfillsSet) {
+        polyfills.push(i);
+      }
     },
     visitor: addAndRemovePolyfillImports,
   };

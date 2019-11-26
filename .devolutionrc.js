@@ -13,6 +13,10 @@ module.exports = Promise.resolve({ // could be async
    * (if not installed, then it's v2)
    */
   corejs: "3",
+  /**
+   * include proposals polyfills, core-js 3 only
+   */
+  proposals: false,
 
   /**
    * files to add could be RegExp or array
@@ -26,6 +30,9 @@ module.exports = Promise.resolve({ // could be async
 
   /**
    * are polyfills included in the baseline bundle? If yes no polyfills which "might be" required for esmodules target would be added
+   * IT'S BETTER TO INCLUDE THEM
+   * to prevent duplication among chunks
+   * (keep in mind - polyfills landed in the main bundle will not be duplicated)
    */
   includesPolyfills: false,
 
@@ -101,8 +108,23 @@ module.exports = Promise.resolve({ // could be async
     '@babel/plugin-syntax-dynamic-import',
   ],
 
+  // some files might be excluded from polyfilling
+  dontPolyfill: [
+    /manifest/, // dont polyfill webpack manifest
+  ],
+
+  // TODO: inject some polyfills to the "main bundle"
+  // addPolyfills: {
+  //   esm: {
+  //     // probably none?
+  //   },
+  //   es5: {
+  //     // which? what about a few "ignored" ones?
+  //   }
+  // },
   /**
-   * Some polyfills might be "manually" bundles. Let's us know which...
+   * Some polyfills might be "manually" bundled, or you just might dont need them - automatic detection is not perfect.
+   * Let's us know which...
    */
   ignorePolyfills: [
     // put a list of polyfills to ignore, they would be considered as already added

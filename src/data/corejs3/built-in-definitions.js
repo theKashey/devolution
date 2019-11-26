@@ -422,18 +422,18 @@ export const StaticProperties = {
   Float64Array: TypedArrayStaticMethods,
 };
 
-export const CommonInstanceDependencies = new Set([
+export const CommonInstanceDependencies = [
   "es.object.to-string",
   "es.object.define-getter",
   "es.object.define-setter",
   "es.object.lookup-getter",
   "es.object.lookup-setter",
   "es.regexp.exec",
-]);
+];
 
-export const PossibleGlobalObjects = new Set([
+export const PossibleGlobalObjects = [
   "global",
   "globalThis",
   "self",
   "window",
-]);
+]

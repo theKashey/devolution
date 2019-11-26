@@ -23,7 +23,8 @@
 - 🚀 fast - uses [swc](https://github.com/swc-project/swc) to be a blazing 🔥 fast!
 - 📱 multi threaded - uses [jest-worker](https://github.com/facebook/jest/tree/master/packages/jest-worker) to consume all your CPU cores
 - 🗜 compact - uses [terser](https://github.com/terser-js/terser) without mangling to re-compress the result
-- 🦖 supports `core-js` 2 or 3 
+- 🦎 optimized - uses [rollup](https://rollupjs.org/guide/en/) to handle polyfills
+- 🦖 supports `core-js` 2 and 3 
 
 ### TWO bundles to rule the world
 
