@@ -827,10 +827,10 @@
     lodash "^4.17.13"
     to-fast-properties "^2.0.0"
 
-"@swc/core@^1.0.48":
-  version "1.0.48"
-  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.0.48.tgz#d7ebdfbba6ae452729d1f907f10c7a237e30c9cc"
-  integrity sha512-rnthoFZ6ZWbMVjHXgNpg4ams6KzJeHFiFhTbBPflkqret0HUs5f5laT1DWYFz0y4fGU7l/0CG+rGB3EEA9Keeg==
+"@swc/core@^1.0.54":
+  version "1.0.54"
+  resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.0.54.tgz#75765bdada36731377289b809ed6f189db074924"
+  integrity sha512-GkbZVugu///TKxSIT9sH+rT4hvx3p5pxOrL5OeVG0nGbiwWjjL/LOxbO+IDiYto+TVz+zKGejuLei5L7qvanug==
   dependencies:
     mkdirp "^0.5.1"
     neon-cli "^0.2.0"

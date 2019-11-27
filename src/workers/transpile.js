@@ -2,11 +2,10 @@ import {readFileSync, writeFileSync} from 'fs';
 import {join} from 'path';
 
 import terser from "terser";
-import {transformSync} from "@babel/core";
-import swc from "@swc/core";
 
-const compileBabel = (code, targets, plugins) => (
-  transformSync(code, {
+const compileBabel = (code, targets, plugins) => {
+  const {transformSync} = require("@babel/core");
+  return transformSync(code, {
     babelrc: false,
     presets: [
       [
@@ -14,11 +13,13 @@ const compileBabel = (code, targets, plugins) => (
         targets,
       }]],
     plugins,
-  }).code
-);
+  }).code;
+};
 
-const compileSWC = async (code, minify) => (
-  (await swc.transform(code, {
+const compileSWC = async (code, minify) => {
+  const {transform} = require("@swc/core");
+
+  return (await transform(code, {
     "minify": minify,
     "module": {
       "type": "commonjs",
@@ -35,9 +36,8 @@ const compileSWC = async (code, minify) => (
         "optimizer": undefined
       }
     }
-  })).code
-);
-
+  })).code;
+};
 
 export const compile = async (dist, file, target, {targets, plugins, useSWC, useTerser}) => {
   const code = readFileSync(join(dist, file)).toString();

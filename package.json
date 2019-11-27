@@ -19,6 +19,9 @@
   "author": "theKashey <thekashey@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/theKashey/devolution#readme",
+  "peerDependencies": {
+    "@swc/core": "^1.0.48"
+  },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.7.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.6.2",
@@ -26,7 +29,6 @@
     "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/plugin-syntax-object-rest-spread": "^7.2.0",
     "@babel/preset-env": "^7.7.1",
-    "@swc/core": "^1.0.48",
     "chalk": "^3.0.0",
     "core-js-compat": "^3.4.2",
     "jest-worker": "^24.0.0",
@@ -42,6 +44,7 @@
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.3.3",
     "@babel/register": "^7.0.0",
+    "@swc/core": "^1.0.54",
     "chai": "^4.2.0"
   }
 }

@@ -51,6 +51,14 @@ export const scan = async (dist, out, _options = getRC()) => {
     throw new Error('invalid core-js version:' + corejsVersion);
   }
 
+  if (options.useSWC) {
+    try {
+      require("@swc/core");
+    } catch (e) {
+      throw new Error('to use SWC please install `@swc/core`');
+    }
+  }
+
   const {builtIns, definitions} = corejs;
 
   const {targets, proposals, addPolyfills} = options;
@@ -231,7 +239,7 @@ export const scan = async (dist, out, _options = getRC()) => {
 
             writePromises.push((async () => {
               let composedResult = polyCache[`${target}-${key}`] = '';
-              if (!dontPolyfill.some(mask => mask.match(key))) {
+              if (!dontPolyfill.some(mask => key.match(mask))) {
                 if (fileSize(fileIn) > 0) {
                   composedResult = await worker.composePolyfill(fileIn);
                   const {error} = composedResult;
