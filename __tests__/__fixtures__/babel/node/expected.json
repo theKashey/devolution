@@ -1,0 +1,41 @@
+{
+  "2": {
+    "polyfills": [
+      "es6.object.to-string",
+      "es6.promise",
+      "es6.map",
+      "es6.string.iterator",
+      "es6.array.iterator",
+      "web.dom.iterable"
+    ],
+    "flags": {
+      "usesRegenerator": false
+    }
+  },
+  "3": {
+    "polyfills": [
+      "es.promise",
+      "es.object.to-string",
+      "es.map",
+      "esnext.map.delete-all",
+      "esnext.map.every",
+      "esnext.map.filter",
+      "esnext.map.find",
+      "esnext.map.find-key",
+      "esnext.map.includes",
+      "esnext.map.key-of",
+      "esnext.map.map-keys",
+      "esnext.map.map-values",
+      "esnext.map.merge",
+      "esnext.map.reduce",
+      "esnext.map.some",
+      "esnext.map.update",
+      "es.string.iterator",
+      "es.array.iterator",
+      "web.dom-collections.iterator"
+    ],
+    "flags": {
+      "usesRegenerator": false
+    }
+  }
+}

@@ -113,7 +113,7 @@ module.exports = Promise.resolve({ // could be async
     /manifest/, // dont polyfill webpack manifest
   ],
 
-  // TODO: inject some polyfills to the "main bundle"
+  // TODO: inject some target specific polyfills to the "main bundle"
   // addPolyfills: {
   //   esm: {
   //     // probably none?

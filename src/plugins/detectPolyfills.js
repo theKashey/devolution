@@ -83,6 +83,11 @@ export default (polyfills, flags, definitions) => function ({types: t}) {
       // (async function () { }).finally(...)
       if (node.async) {
         this.addUnsupported(PromiseDependencies);
+        flags.usesRegenerator = true;
+      }
+      // (function* () { })
+      if (node.generator) {
+        flags.usesRegenerator = true;
       }
     },
 

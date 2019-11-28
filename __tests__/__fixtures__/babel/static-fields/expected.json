@@ -1,0 +1,20 @@
+{
+  "2": {
+    "polyfills": [
+      "es6.number.is-integer",
+      "es6.number.constructor"
+    ],
+    "flags": {
+      "usesRegenerator": false
+    }
+  },
+  "3": {
+    "polyfills": [
+      "es.number.is-integer",
+      "es.number.constructor"
+    ],
+    "flags": {
+      "usesRegenerator": false
+    }
+  }
+}

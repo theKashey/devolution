@@ -325,7 +325,7 @@ export default {
     "samsung": "2.1",
     "electron": "1.1"
   },
-  "es6.function.bind": {
+  "es6.xtion.bind": {
     "chrome": "7",
     "opera": "12",
     "edge": "12",

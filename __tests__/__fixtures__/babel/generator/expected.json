@@ -1,0 +1,20 @@
+{
+  "2": {
+    "polyfills": [
+      "es6.object.to-string",
+      "es6.promise"
+    ],
+    "flags": {
+      "usesRegenerator": true
+    }
+  },
+  "3": {
+    "polyfills": [
+      "es.promise",
+      "es.object.to-string"
+    ],
+    "flags": {
+      "usesRegenerator": true
+    }
+  }
+}
