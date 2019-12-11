@@ -328,6 +328,8 @@ export const scan = async (dist, out, _options = getRC()) => {
   await inTime(async () => {
     console.log(" -> 🥚 -> 🥚", chalk.bold.underline.green("linking...."), otherFiles.length, 'files');
 
+    const copyCommand = options.copyFiles ? 'cp' : 'ln -s';
+
     if (otherFiles.length) {
       Object
         .keys(targets)
@@ -335,7 +337,7 @@ export const scan = async (dist, out, _options = getRC()) => {
           try {
             child_process.execSync(
               otherFiles
-                .map(file => `ln -s ${path.join(dist, file)} ${path.join(outDir, target, file)}`)
+                .map(file => `${copyCommand} ${path.join(dist, file)} ${path.join(outDir, target, file)}`)
                 .join(' && ')
             )
           } catch (e) {

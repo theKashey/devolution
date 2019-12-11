@@ -19,6 +19,13 @@ module.exports = Promise.resolve({ // could be async
   proposals: false,
 
   /**
+   * if set to `false` it would SYMLINK files, effective keeping only one version for files
+   * not managed by devolution (read - non-js).
+   * If set to `true` - all files would be copied.
+   */
+  copyFiles: false,
+
+  /**
    * files to add could be RegExp or array
    */
   match: /\.js$/,
