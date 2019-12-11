@@ -1,6 +1,6 @@
 {
   "name": "devolution",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "A devolution gun for your bundle",
   "main": "./dist/index.js",
   "scripts": {
