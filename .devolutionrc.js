@@ -120,15 +120,17 @@ module.exports = Promise.resolve({ // could be async
     /manifest/, // dont polyfill webpack manifest
   ],
 
-  // TODO: inject some target specific polyfills to the "main bundle"
-  // addPolyfills: {
-  //   esm: {
-  //     // probably none?
-  //   },
-  //   es5: {
-  //     // which? what about a few "ignored" ones?
-  //   }
-  // },
+  // injects some target specific polyfills to the "main bundle"
+  addPolyfills: {
+    esm: [
+      // probably none?
+    ],
+    es5: [
+      // which? what about a few "ignored" ones?
+      // or, like, regenerator runtime? (ignore it beforehand)
+      // 'regenerator-runtime',
+    ]
+  },
   /**
    * Some polyfills might be "manually" bundled, or you just might dont need them - automatic detection is not perfect.
    * Let's us know which...

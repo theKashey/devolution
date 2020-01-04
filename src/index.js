@@ -15,29 +15,8 @@ const corejsVersions = {
 };
 
 import {getRC} from "./rc";
-
-const isBelow = (ruleName, rule, target) => (
-  rule && Object
-    .keys(target)
-    .some(x => (
-        !rule[x] || +rule[x] > +target[x]
-      )
-    )
-);
-
-const fileSize = file => fs.statSync(file).size;
-
-const getSize = (location, files) => (
-  files.reduce((acc, name) => acc + fs.statSync(path.join(location, name)).size, 0)
-);
-
-const inTime = async cb => {
-  const timeIn = Date.now();
-  await cb();
-  console.info('\n');
-  console.info('   --- step finished in ', Math.round(100 * (Date.now() - timeIn) / 1000) / 100, 's');
-  console.info('\n');
-};
+import {esmBaseline} from "./data/esmBaseline";
+import {inTime, fileSize, isBelow, getSize} from "./utils";
 
 export const scan = async (dist, out, _options = getRC()) => {
   console.log(chalk.bold.underline.green("devolution"), "🦎 -> 🦖");
@@ -152,6 +131,10 @@ export const scan = async (dist, out, _options = getRC()) => {
       tableStream.write([mainBundle, basePolyfills.length]);
     }
 
+    if (addPolyfills && !mainBundle) {
+      throw new Error("devolution: in order to use `addPolyfills` define `rootBundles` condition.")
+    }
+
     await Promise.all(
       jsFiles.map(async file => {
         if (file !== mainBundle) {
@@ -198,9 +181,11 @@ export const scan = async (dist, out, _options = getRC()) => {
           wrapWord: true,
         }
       },
-      columnCount: 5
+      columnCount: 6
     });
-    tableStream.write(['target', 'file', 'missing polyfills', 'size', 'names']);
+    tableStream.write(['target', 'file', 'missing polyfills', 'size', 'names', 'extra']);
+
+    const usedInMain = new Set();
 
     const writePromises = [];
     Object
@@ -210,13 +195,36 @@ export const scan = async (dist, out, _options = getRC()) => {
         Object
           .keys(polyfills)
           .forEach(key => {
-            const list = polyfills[key]
+            let extraCode = '';
+
+            const localPolyfills = polyfills[key]
               .filter(
                 rule => (
                   // would not be included in a base image
-                  !(options.includesPolyfills && isBelow(rule, builtIns[rule], firstTarget)) &&
+                  (rule==='@regenerator' || !(options.includesPolyfills && isBelow(rule, builtIns[rule], firstTarget))) &&
+                  // and not used in the main bundle
+                  (!usedInMain.has(rule) || key===mainBundle) &&
                   // not ignored in config
-                  !options.ignorePolyfills.includes(rule) &&
+                  !options.ignorePolyfills.includes(rule)
+                )
+              );
+
+            if (key === mainBundle) {
+              if(addPolyfills) {
+                localPolyfills.push(...(addPolyfills[target] || []));
+              }
+              localPolyfills.forEach(name => usedInMain.add(name));
+            }
+
+            // uses regenerator
+            if (localPolyfills.includes('@regenerator')) {
+              if (isBelow('regenerator', esmBaseline, targets[target])) {
+                extraCode += "import 'regenerator-runtime';"
+              }
+            }
+
+            const list = localPolyfills
+              .filter(rule => (
                   // and required for the target
                   isBelow(rule, builtIns[rule], targets[target])
                 )
@@ -230,12 +238,8 @@ export const scan = async (dist, out, _options = getRC()) => {
 
             const chunkPolyfills = list.map(x => `import 'core-js/modules/${x}'`);
 
-            if (polyfills[key].indexOf('@regenerator') >= 0 && target === 'ie11') {
-              chunkPolyfills.push("import 'regenerator-runtime';");
-            }
-
             const fileIn = path.join(polyfillDir, `${target}-${key}.mjs`);
-            fs.writeFileSync(fileIn, chunkPolyfills.join('\n'));
+            fs.writeFileSync(fileIn, extraCode + chunkPolyfills.join('\n'));
 
             writePromises.push((async () => {
               let composedResult = polyCache[`${target}-${key}`] = '';
@@ -252,7 +256,7 @@ export const scan = async (dist, out, _options = getRC()) => {
                 }
               }
 
-              tableStream.write([target, key, list.length ? list.length : '-', composedResult.length, list]);
+              tableStream.write([target, key, list.length ? list.length : '-', composedResult.length,list, extraCode]);
             })());
           });
       });
