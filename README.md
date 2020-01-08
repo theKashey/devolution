@@ -96,7 +96,7 @@ This syntax would made things even worse for the legacy browsers.
 Use feature detection to pick the right bundle:
 ```js
   var script = document.createElement('script');
-  var prefix = (!('noModule' in check)) ? "/ie11" : "/esm"; 
+  var prefix = (!('noModule' in script)) ? "/ie11" : "/esm"; 
   script.src = prefix + "/index.js"; // or main? you better know
   document.head.appendChild(script);
 ```
